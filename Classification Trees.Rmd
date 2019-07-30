@@ -1,0 +1,87 @@
+---
+title: "Classification Trees"
+author: "Gus Garcia"
+date: "30 July 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Predicting With Classification Trees
+
+### Library and Data Loading
+
+
+```{r, message=FALSE}
+data(iris); library(ggplot2); library(caret)
+set.seed(49662)
+```
+
+> The relevant method comes from the `caret` package, namely, `method=rpart` 
+
+### Initial EDA
+
+
+```{r}
+names(iris)
+```
+
+```{r}
+table(iris$Species)
+```
+
+## Fetching Training and Testing Data
+
+```{r}
+inTrain <- createDataPartition(y = iris$Species, list = F, p = .7)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+dim(training); dim(testing)
+```
+
+
+```{r}
+qplot(Petal.Width, Sepal.Width, colour=Species, data=training)
+```
+
+
+## Creating The Model
+
+
+```{r, message=FALSE}
+modelFit <- train(Species ~ ., method='rpart', data=training)
+modelFileName <- 'week_3_classificatioin_trees_model.rda'
+if (!file.exists(modelFileName)) {
+        save(modelFit, file = modelFileName)
+}
+print(modelFit$finalModel)
+```
+
+## Plotting The Tree
+
+```{r}
+plot(modelFit$finalModel, uniform=TRUE, main="Classification Tree")
+text(modelFit$finalModel, use.n=TRUE, all=TRUE, cex=.6)
+```
+
+### Predicting New Value
+
+```{r, message=FALSE}
+prediction <- predict(modelFit, newdata = testing)
+prediction
+```
+
+```{r}
+confusionMatrix(prediction, testing$Species)
+```
+```{r, message=FALSE}
+pred_plot_data <- testing[, -5]
+pred_plot_data$Species <- prediction
+require(gridExtra)
+p1 <- qplot(Petal.Width, Sepal.Width, data = pred_plot_data, colour=Species, main="Prediction")
+p2 <- qplot(Petal.Width, Sepal.Width, data = testing, colour=Species, main="Testing")
+grid.arrange(p1, p2, ncol = 2)
+```

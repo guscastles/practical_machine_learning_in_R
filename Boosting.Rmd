@@ -1,0 +1,49 @@
+---
+title: "Boosting"
+author: "Gus Garcia"
+date: "30 July 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Predicting With Boosting
+
+### Library and Data Loading
+```{r, message=FALSE}
+library(ISLR)
+data(Wage)
+library(ggplot2)
+library(caret)
+set.seed(49662)
+```
+
+## Training And Testing Data
+```{r}
+dataWage <- subset(Wage, select=-c(logwage))
+inTrain <- createDataPartition(y=dataWage$wage, list=F, p=.7)
+training <- dataWage[inTrain,]
+testing <- dataWage[-inTrain,]
+```
+## Model Fitting
+
+```{r, warning=FALSE, message=FALSE}
+model_file <- 'boosting.rda'
+if (!file.exists(model_file)) {
+        modelFit <- train(wage ~ ., data=training, method="gbm", verbose=FALSE)
+        save(modelFit, file=model_file)
+} else {
+        load(file = model_file)
+}
+modelFit
+```
+
+## Predicting And Plotting New Values
+```{r}
+prediction <- predict(modelFit, testing)
+p1 <- qplot(x=prediction, y=wage, data=testing, main="New Data Predictions")
+p1 + geom_line(aes(y=wage, x=wage), colour="red")
+```

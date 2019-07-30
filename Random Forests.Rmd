@@ -1,0 +1,65 @@
+---
+title: "Random Forrests"
+author: "Gus Garcia"
+date: "30 July 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Predicting With Random Forrests
+
+### Library and Data Loading
+```{r, message=FALSE}
+data(iris)
+library(ggplot2)
+library(caret)
+library(randomForest)
+set.seed(49662)
+```
+
+> The relevant method comes from the `caret` package, namely, `method=rpart` 
+
+## Training And Testing Data
+
+
+```{r}
+inTrain <- createDataPartition(y=iris$Species, list=F, p=.7)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+```
+## Model Fitting
+
+```{r}
+modelFit <- train(Species ~ ., data=training, method="rf", prox=TRUE)
+modelFit
+```
+
+### Checking A Single Tree
+```{r}
+getTree(modelFit$finalModel, k=2)
+```
+
+## Finding The Centres Of Each Group
+```{r}
+irisP <- classCenter(training[,c(3, 4)], training$Species, modelFit$finalModel$prox)
+irisP <- as.data.frame(irisP)
+irisP$Species <- rownames(irisP)
+p <- qplot(Petal.Width, Petal.Length, col=Species, data=training)
+p + geom_point(aes(x=Petal.Width, y=Petal.Length, col=Species), size=5, shape=4, data=irisP)
+```
+
+## Predicting New Values
+```{r}
+prediction <- predict(modelFit, testing)
+testing$predRight <- prediction == testing$Species
+table(prediction, testing$Species)
+```
+
+### Plotting The Prediction With Missed Values
+```{r}
+qplot(Petal.Width, Petal.Length, colour=predRight, data=testing, main="New Data Predictions")
+```

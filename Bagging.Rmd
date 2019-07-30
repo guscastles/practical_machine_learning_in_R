@@ -1,0 +1,74 @@
+---
+title: "Bagging"
+author: "Gus Garcia"
+date: "30 July 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Predicting With Bagging - Bootstrap Aggregating
+
+### Library and Data Loading
+
+
+```{r, message=FALSE}
+library(ElemStatLearn); data(ozone, package = "ElemStatLearn")
+set.seed(49662)
+```
+
+> The relevant method comes from the `caret` package, namely, `method=rpart` 
+
+### Initial EDA
+
+
+```{r}
+ozone <- ozone[order(ozone$ozone),]
+head(ozone)
+```
+
+## Bagged Loess
+
+```{r, message=FALSE, warning=FALSE}
+ll <- matrix(NA, nrow = 10, ncol = 155)
+for (i in 1:10) {
+        ss <- sample(1:dim(ozone)[1], replace=T)     
+        ozone0 <- ozone[ss,]; ozone0 <- ozone0[order(ozone$ozone),]
+        loess0 <- loess(temperature ~ ozone, data=ozone0, span = .2)
+        ll[i,] <- predict(loess0, newdata = data.frame(ozone=1:155))
+}
+```
+
+Plotting the 10 curves from matrix `ll`
+```{r, message=FALSE}
+plot(ozone$ozone, ozone$temperature, pch=19, cex=.5)
+for(i in 1:10) {
+        lines(1:155, ll[i,], col="grey", lwd=2)
+}
+lines(1:155, apply(ll, 2, mean), col="red", lwd=2)
+```
+
+
+## Bagging With the Caret Package
+```{r, message=FALSE}
+require(caret)
+inTrain <- createDataPartition(ozone$temperature, list=FALSE)
+training <- ozone[inTrain,]
+testing <- ozone[-inTrain,]
+trCtrl <- trainControl(method = "boot", number = 50)
+modelFit <- train(temperature ~ ozone, data=training, method="treebag", trControl=trCtrl)
+modelFit
+```
+
+## Prediction Plotting
+```{r}
+prediction <- predict(modelFit, testing)
+with(testing, {
+        plot(ozone, prediction, pch=19, cex=.5)
+        points(ozone, temperature, pch=19, col="red", cex=.5)
+        lines(ozone, prediction, lwd=1, col="green")
+})
+```
