@@ -1,0 +1,68 @@
+---
+title: "Peer-graded Assignment: Prediction Assignment Writeup"
+author: "Gus Garcia"
+date: "3 August 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+The goal of this project is to predict the manner in which sujects to the study did the exercise. This is the "classe" variable in the training set. Several variables are used to predict with. A report will describe how the model was built, how the cross validation was used, what the expected out of sample error is interpreted, and why the choices are made. Lastly, the model will predict 20 different test cases.
+
+## Relevant Data
+
+This is the training and testing data available for this project
+```{r data, echo=TRUE, message=FALSE}
+loadFile <- function(fileName) {
+        if (!file.exists(fileName)) {
+                url <- paste("https://d396qusza40orc.cloudfront.net/predmachlearn", fileName, sep = "/")
+                download.file(url, destfile = fileName)
+        }
+        read.csv(fileName)
+}
+datasets <- list(NA, NA)
+names(datasets) <- c("training", "testing")
+for (dataset in names(datasets)) {
+        datasets[[dataset]] <- loadFile(paste0("pml-", dataset, ".csv"))
+}
+```
+
+## Exploratory Data Analysis
+
+### Training Data
+
+#### Data Structure <a href="#data_structure">(Appendix I)</a>
+
+```{r training_dataset, echo=FALSE}
+training <- datasets[['training']]
+```
+The inspection on the dataframe structure shows several variables with majority null values. This values will be removed from the relevant predictors for training the model.
+
+#### Data Summary <a href="#data_structure">(Appendix II)</a>
+
+
+
+#### Sample Records
+```{r sample}
+head(training[, c(1:6)])
+```
+
+## Appendix I
+<a name="data_structure"></a>
+
+### Data Structure
+```{r structure}
+str(training)
+```
+
+## Appendix II
+<a name="data_summary"></a>
+
+### Data Summary 
+```{r summary}
+summary(training)
+```
