@@ -316,10 +316,18 @@ $(document).ready(function () {
 
 <div id="abstract" class="section level2">
 <h2>Abstract</h2>
-<p>The goal of your project is to predict the manner in which they did the exercise. This is the “classe” variable in the training set. You may use any of the other variables to predict with. You should create a report describing how you built your model, how you used cross validation, what you think the expected out of sample error is, and why you made the choices you did. You will also use your prediction model to predict 20 different test cases.</p>
+<p>One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict the manner in which sujects of the study did the exercise. This is the “classe” variable in the training set. Several variables are used to predict with. A report will describe how the model was built, how the cross validation was used, what the expected out of sample error is interpreted, and why the choices are made. Lastly, the model will predict 20 different test cases.</p>
+<p>The data for this project come from this source:</p>
+<blockquote>
+<p><a href="http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har" class="uri">http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har</a></p>
+</blockquote>
+<p>This group has been very generous in allowing the data to be used for this kind of assignment.</p>
+<blockquote>
+<p>Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. <a href="http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/work.jsf?p1=10335">Wearable Computing: Accelerometers’ Data Classification of Body Postures and Movements</a> . Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6. Cited by 2 (Google Scholar)</p>
+</blockquote>
 </div>
-<div id="relevant-data" class="section level2">
-<h2>Relevant Data</h2>
+<div id="data-fetching" class="section level2">
+<h2>Data Fetching</h2>
 <p>This is the training and testing data available for this project</p>
 <pre class="r"><code>loadFile &lt;- function(fileName) {
         if (!file.exists(fileName)) {
@@ -332,7 +340,9 @@ datasets &lt;- list(NA, NA)
 names(datasets) &lt;- c(&quot;training&quot;, &quot;testing&quot;)
 for (dataset in names(datasets)) {
         datasets[[dataset]] &lt;- loadFile(paste0(&quot;pml-&quot;, dataset, &quot;.csv&quot;))
-}</code></pre>
+}
+training &lt;- datasets[['training']]
+testing &lt;- datasets[['testing']]</code></pre>
 </div>
 <div id="exploratory-data-analysis" class="section level2">
 <h2>Exploratory Data Analysis</h2>
@@ -340,7 +350,89 @@ for (dataset in names(datasets)) {
 <h3>Training Data</h3>
 <div id="data-structure-appendix-i" class="section level4">
 <h4>Data Structure <a href="#data_structure">(Appendix I)</a></h4>
-<p>The inspection on the dataframe structure shows several variables with majority null values. This values will be removed from the relevant predictors for training the model.</p>
+<p>The inspection on the dataframe structure shows several variables with majority null values. This values will be removed from the relevant predictor list for training the model.</p>
+<p>These variables will be removed from the predictors list, since they are not measurement variables or not relevant to this study:</p>
+<ul>
+<li>X</li>
+<li>user_name</li>
+<li>raw_timestamp_par_1</li>
+<li>raw_timestamp_par_2</li>
+<li>cvtd_timestamp</li>
+<li>new_window</li>
+<li>num_window</li>
+</ul>
+<p>These are the relevant features for the model</p>
+<pre><code>##  [1] &quot;roll_belt&quot;            &quot;pitch_belt&quot;           &quot;yaw_belt&quot;            
+##  [4] &quot;total_accel_belt&quot;     &quot;gyros_belt_x&quot;         &quot;gyros_belt_y&quot;        
+##  [7] &quot;gyros_belt_z&quot;         &quot;accel_belt_x&quot;         &quot;accel_belt_y&quot;        
+## [10] &quot;accel_belt_z&quot;         &quot;magnet_belt_x&quot;        &quot;magnet_belt_y&quot;       
+## [13] &quot;magnet_belt_z&quot;        &quot;roll_arm&quot;             &quot;pitch_arm&quot;           
+## [16] &quot;yaw_arm&quot;              &quot;total_accel_arm&quot;      &quot;gyros_arm_x&quot;         
+## [19] &quot;gyros_arm_y&quot;          &quot;gyros_arm_z&quot;          &quot;accel_arm_x&quot;         
+## [22] &quot;accel_arm_y&quot;          &quot;accel_arm_z&quot;          &quot;magnet_arm_x&quot;        
+## [25] &quot;magnet_arm_y&quot;         &quot;magnet_arm_z&quot;         &quot;roll_dumbbell&quot;       
+## [28] &quot;pitch_dumbbell&quot;       &quot;yaw_dumbbell&quot;         &quot;total_accel_dumbbell&quot;
+## [31] &quot;gyros_dumbbell_x&quot;     &quot;gyros_dumbbell_y&quot;     &quot;gyros_dumbbell_z&quot;    
+## [34] &quot;accel_dumbbell_x&quot;     &quot;accel_dumbbell_y&quot;     &quot;accel_dumbbell_z&quot;    
+## [37] &quot;magnet_dumbbell_x&quot;    &quot;magnet_dumbbell_y&quot;    &quot;magnet_dumbbell_z&quot;   
+## [40] &quot;roll_forearm&quot;         &quot;pitch_forearm&quot;        &quot;yaw_forearm&quot;         
+## [43] &quot;total_accel_forearm&quot;  &quot;gyros_forearm_x&quot;      &quot;gyros_forearm_y&quot;     
+## [46] &quot;gyros_forearm_z&quot;      &quot;accel_forearm_x&quot;      &quot;accel_forearm_y&quot;     
+## [49] &quot;accel_forearm_z&quot;      &quot;magnet_forearm_x&quot;     &quot;magnet_forearm_y&quot;    
+## [52] &quot;magnet_forearm_z&quot;</code></pre>
+<p>A quick classification tree (CART) model, to create an initial analysis of the possible model</p>
+<pre class="r"><code>library(caret)
+modelFile &lt;- &quot;rfModel.rda&quot;
+if (!file.exists(modelFile)) {
+        trControl = trainControl(method = &quot;cv&quot;, number = 5, allowParallel = TRUE)
+        modelFit &lt;- train(classe ~ ., data = training[, c(&quot;classe&quot;, relevantFeatures)], method = &quot;rf&quot;, trControl = trControl)
+        save(modelFit, file = modelFile)
+} else {
+        load(file = modelFile)
+}
+modelFit</code></pre>
+<pre><code>## Random Forest 
+## 
+## 19622 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (5 fold) 
+## Summary of sample sizes: 15699, 15696, 15698, 15697, 15698 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa    
+##    2    0.9935787  0.9918771
+##   27    0.9936806  0.9920064
+##   52    0.9877181  0.9844639
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was mtry = 27.</code></pre>
+<p>Testing the model with the testing set and producing the 20 results for the project quiz</p>
+<pre class="r"><code>prediction &lt;- predict(modelFit, testing)
+matrix(prediction, ncol = 1)</code></pre>
+<pre><code>##       [,1]
+##  [1,] &quot;B&quot; 
+##  [2,] &quot;A&quot; 
+##  [3,] &quot;B&quot; 
+##  [4,] &quot;A&quot; 
+##  [5,] &quot;A&quot; 
+##  [6,] &quot;E&quot; 
+##  [7,] &quot;D&quot; 
+##  [8,] &quot;B&quot; 
+##  [9,] &quot;A&quot; 
+## [10,] &quot;A&quot; 
+## [11,] &quot;B&quot; 
+## [12,] &quot;C&quot; 
+## [13,] &quot;B&quot; 
+## [14,] &quot;A&quot; 
+## [15,] &quot;E&quot; 
+## [16,] &quot;E&quot; 
+## [17,] &quot;A&quot; 
+## [18,] &quot;B&quot; 
+## [19,] &quot;B&quot; 
+## [20,] &quot;B&quot;</code></pre>
 </div>
 <div id="data-summary-appendix-ii" class="section level4">
 <h4>Data Summary <a href="#data_structure">(Appendix II)</a></h4>
@@ -383,21 +475,21 @@ for (dataset in names(datasets)) {
 ##  $ pitch_belt              : num  8.07 8.07 8.07 8.05 8.07 8.06 8.09 8.13 8.16 8.17 ...
 ##  $ yaw_belt                : num  -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 ...
 ##  $ total_accel_belt        : int  3 3 3 3 3 3 3 3 3 3 ...
-##  $ kurtosis_roll_belt      : Factor w/ 397 levels &quot;&quot;,&quot;-0.016850&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ kurtosis_picth_belt     : Factor w/ 317 levels &quot;&quot;,&quot;-0.021887&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ kurtosis_yaw_belt       : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_roll_belt      : Factor w/ 395 levels &quot;&quot;,&quot;-0.003095&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_roll_belt.1    : Factor w/ 338 levels &quot;&quot;,&quot;-0.005928&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_yaw_belt       : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ kurtosis_roll_belt      : Factor w/ 397 levels &quot;&quot;,&quot;-0.016850&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ kurtosis_picth_belt     : Factor w/ 317 levels &quot;&quot;,&quot;-0.021887&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ kurtosis_yaw_belt       : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_roll_belt      : Factor w/ 395 levels &quot;&quot;,&quot;-0.003095&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_roll_belt.1    : Factor w/ 338 levels &quot;&quot;,&quot;-0.005928&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_yaw_belt       : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_roll_belt           : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_picth_belt          : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ max_yaw_belt            : Factor w/ 68 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ max_yaw_belt            : Factor w/ 68 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ min_roll_belt           : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ min_pitch_belt          : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ min_yaw_belt            : Factor w/ 68 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ min_yaw_belt            : Factor w/ 68 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ amplitude_roll_belt     : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ amplitude_pitch_belt    : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ amplitude_yaw_belt      : Factor w/ 4 levels &quot;&quot;,&quot;#DIV/0!&quot;,&quot;0.00&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ amplitude_yaw_belt      : Factor w/ 4 levels &quot;&quot;,&quot;#DIV/0!&quot;,&quot;0.00&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ var_total_accel_belt    : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ avg_roll_belt           : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ stddev_roll_belt        : num  NA NA NA NA NA NA NA NA NA NA ...
@@ -440,12 +532,12 @@ for (dataset in names(datasets)) {
 ##  $ magnet_arm_x            : int  -368 -369 -368 -372 -374 -369 -373 -372 -369 -376 ...
 ##  $ magnet_arm_y            : int  337 337 344 344 337 342 336 338 341 334 ...
 ##  $ magnet_arm_z            : int  516 513 513 512 506 513 509 510 518 516 ...
-##  $ kurtosis_roll_arm       : Factor w/ 330 levels &quot;&quot;,&quot;-0.02438&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ kurtosis_picth_arm      : Factor w/ 328 levels &quot;&quot;,&quot;-0.00484&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ kurtosis_yaw_arm        : Factor w/ 395 levels &quot;&quot;,&quot;-0.01548&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_roll_arm       : Factor w/ 331 levels &quot;&quot;,&quot;-0.00051&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_pitch_arm      : Factor w/ 328 levels &quot;&quot;,&quot;-0.00184&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_yaw_arm        : Factor w/ 395 levels &quot;&quot;,&quot;-0.00311&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ kurtosis_roll_arm       : Factor w/ 330 levels &quot;&quot;,&quot;-0.02438&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ kurtosis_picth_arm      : Factor w/ 328 levels &quot;&quot;,&quot;-0.00484&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ kurtosis_yaw_arm        : Factor w/ 395 levels &quot;&quot;,&quot;-0.01548&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_roll_arm       : Factor w/ 331 levels &quot;&quot;,&quot;-0.00051&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_pitch_arm      : Factor w/ 328 levels &quot;&quot;,&quot;-0.00184&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_yaw_arm        : Factor w/ 395 levels &quot;&quot;,&quot;-0.00311&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_roll_arm            : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_picth_arm           : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_yaw_arm             : int  NA NA NA NA NA NA NA NA NA NA ...
@@ -458,18 +550,18 @@ for (dataset in names(datasets)) {
 ##  $ roll_dumbbell           : num  13.1 13.1 12.9 13.4 13.4 ...
 ##  $ pitch_dumbbell          : num  -70.5 -70.6 -70.3 -70.4 -70.4 ...
 ##  $ yaw_dumbbell            : num  -84.9 -84.7 -85.1 -84.9 -84.9 ...
-##  $ kurtosis_roll_dumbbell  : Factor w/ 398 levels &quot;&quot;,&quot;-0.0035&quot;,&quot;-0.0073&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ kurtosis_picth_dumbbell : Factor w/ 401 levels &quot;&quot;,&quot;-0.0163&quot;,&quot;-0.0233&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ kurtosis_yaw_dumbbell   : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_roll_dumbbell  : Factor w/ 401 levels &quot;&quot;,&quot;-0.0082&quot;,&quot;-0.0096&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_pitch_dumbbell : Factor w/ 402 levels &quot;&quot;,&quot;-0.0053&quot;,&quot;-0.0084&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ skewness_yaw_dumbbell   : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ kurtosis_roll_dumbbell  : Factor w/ 398 levels &quot;&quot;,&quot;-0.0035&quot;,&quot;-0.0073&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ kurtosis_picth_dumbbell : Factor w/ 401 levels &quot;&quot;,&quot;-0.0163&quot;,&quot;-0.0233&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ kurtosis_yaw_dumbbell   : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_roll_dumbbell  : Factor w/ 401 levels &quot;&quot;,&quot;-0.0082&quot;,&quot;-0.0096&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_pitch_dumbbell : Factor w/ 402 levels &quot;&quot;,&quot;-0.0053&quot;,&quot;-0.0084&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ skewness_yaw_dumbbell   : Factor w/ 2 levels &quot;&quot;,&quot;#DIV/0!&quot;: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_roll_dumbbell       : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ max_picth_dumbbell      : num  NA NA NA NA NA NA NA NA NA NA ...
-##  $ max_yaw_dumbbell        : Factor w/ 73 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ max_yaw_dumbbell        : Factor w/ 73 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ min_roll_dumbbell       : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ min_pitch_dumbbell      : num  NA NA NA NA NA NA NA NA NA NA ...
-##  $ min_yaw_dumbbell        : Factor w/ 73 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ min_yaw_dumbbell        : Factor w/ 73 levels &quot;&quot;,&quot;-0.1&quot;,&quot;-0.2&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
 ##  $ amplitude_roll_dumbbell : num  NA NA NA NA NA NA NA NA NA NA ...
 ##   [list output truncated]</code></pre>
 </div>
@@ -497,43 +589,43 @@ for (dataset in names(datasets)) {
 ##  02/12/2011 13:34: 1375               Max.   :864.0   Max.   :162.00  
 ##  (Other)         :11007                                               
 ##    pitch_belt          yaw_belt       total_accel_belt kurtosis_roll_belt
-##  Min.   :-55.8000   Min.   :-180.00   Min.   : 0.00             :19216   
-##  1st Qu.:  1.7600   1st Qu.: -88.30   1st Qu.: 3.00    #DIV/0!  :   10   
-##  Median :  5.2800   Median : -13.00   Median :17.00    -1.908453:    2   
-##  Mean   :  0.3053   Mean   : -11.21   Mean   :11.31    -0.016850:    1   
-##  3rd Qu.: 14.9000   3rd Qu.:  12.90   3rd Qu.:18.00    -0.021024:    1   
-##  Max.   : 60.3000   Max.   : 179.00   Max.   :29.00    -0.025513:    1   
-##                                                        (Other)  :  391   
+##  Min.   :-55.8000   Min.   :-180.00   Min.   : 0.00    #DIV/0!  :   10   
+##  1st Qu.:  1.7600   1st Qu.: -88.30   1st Qu.: 3.00    -1.908453:    2   
+##  Median :  5.2800   Median : -13.00   Median :17.00    -0.016850:    1   
+##  Mean   :  0.3053   Mean   : -11.21   Mean   :11.31    -0.021024:    1   
+##  3rd Qu.: 14.9000   3rd Qu.:  12.90   3rd Qu.:18.00    -0.025513:    1   
+##  Max.   : 60.3000   Max.   : 179.00   Max.   :29.00    (Other)  :  391   
+##                                                        NA's     :19216   
 ##  kurtosis_picth_belt kurtosis_yaw_belt skewness_roll_belt
-##           :19216            :19216              :19216   
-##  #DIV/0!  :   32     #DIV/0!:  406     #DIV/0!  :    9   
-##  47.000000:    4                       0.000000 :    4   
-##  -0.150950:    3                       0.422463 :    2   
+##  #DIV/0!  :   32            :    0     #DIV/0!  :    9   
+##  47.000000:    4     #DIV/0!:  406     0.000000 :    4   
+##  -0.150950:    3     NA's   :19216     0.422463 :    2   
 ##  -0.684748:    3                       -0.003095:    1   
 ##  -1.750749:    3                       -0.010002:    1   
 ##  (Other)  :  361                       (Other)  :  389   
+##  NA's     :19216                       NA's     :19216   
 ##  skewness_roll_belt.1 skewness_yaw_belt max_roll_belt     max_picth_belt 
-##           :19216             :19216     Min.   :-94.300   Min.   : 3.00  
-##  #DIV/0!  :   32      #DIV/0!:  406     1st Qu.:-88.000   1st Qu.: 5.00  
-##  0.000000 :    4                        Median : -5.100   Median :18.00  
-##  -2.156553:    3                        Mean   : -6.667   Mean   :12.92  
-##  -3.072669:    3                        3rd Qu.: 18.500   3rd Qu.:19.00  
-##  -6.324555:    3                        Max.   :180.000   Max.   :30.00  
-##  (Other)  :  361                        NA's   :19216     NA's   :19216  
+##  #DIV/0!  :   32             :    0     Min.   :-94.300   Min.   : 3.00  
+##  0.000000 :    4      #DIV/0!:  406     1st Qu.:-88.000   1st Qu.: 5.00  
+##  -2.156553:    3      NA's   :19216     Median : -5.100   Median :18.00  
+##  -3.072669:    3                        Mean   : -6.667   Mean   :12.92  
+##  -6.324555:    3                        3rd Qu.: 18.500   3rd Qu.:19.00  
+##  (Other)  :  361                        Max.   :180.000   Max.   :30.00  
+##  NA's     :19216                        NA's   :19216     NA's   :19216  
 ##   max_yaw_belt   min_roll_belt     min_pitch_belt   min_yaw_belt  
-##         :19216   Min.   :-180.00   Min.   : 0.00          :19216  
-##  -1.1   :   30   1st Qu.: -88.40   1st Qu.: 3.00   -1.1   :   30  
-##  -1.4   :   29   Median :  -7.85   Median :16.00   -1.4   :   29  
-##  -1.2   :   26   Mean   : -10.44   Mean   :10.76   -1.2   :   26  
-##  -0.9   :   24   3rd Qu.:   9.05   3rd Qu.:17.00   -0.9   :   24  
-##  -1.3   :   22   Max.   : 173.00   Max.   :23.00   -1.3   :   22  
-##  (Other):  275   NA's   :19216     NA's   :19216   (Other):  275  
+##  -1.1   :   30   Min.   :-180.00   Min.   : 0.00   -1.1   :   30  
+##  -1.4   :   29   1st Qu.: -88.40   1st Qu.: 3.00   -1.4   :   29  
+##  -1.2   :   26   Median :  -7.85   Median :16.00   -1.2   :   26  
+##  -0.9   :   24   Mean   : -10.44   Mean   :10.76   -0.9   :   24  
+##  -1.3   :   22   3rd Qu.:   9.05   3rd Qu.:17.00   -1.3   :   22  
+##  (Other):  275   Max.   : 173.00   Max.   :23.00   (Other):  275  
+##  NA's   :19216   NA's   :19216     NA's   :19216   NA's   :19216  
 ##  amplitude_roll_belt amplitude_pitch_belt amplitude_yaw_belt
-##  Min.   :  0.000     Min.   : 0.000              :19216     
+##  Min.   :  0.000     Min.   : 0.000              :    0     
 ##  1st Qu.:  0.300     1st Qu.: 1.000       #DIV/0!:   10     
 ##  Median :  1.000     Median : 1.000       0.00   :   12     
 ##  Mean   :  3.769     Mean   : 2.167       0.0000 :  384     
-##  3rd Qu.:  2.083     3rd Qu.: 2.000                         
+##  3rd Qu.:  2.083     3rd Qu.: 2.000       NA's   :19216     
 ##  Max.   :360.000     Max.   :12.000                         
 ##  NA's   :19216       NA's   :19216                          
 ##  var_total_accel_belt avg_roll_belt    stddev_roll_belt var_roll_belt    
@@ -625,21 +717,21 @@ for (dataset in names(datasets)) {
 ##  Max.   : 292.00   Max.   : 782.0   Max.   : 583.0   Max.   : 694.0  
 ##                                                                      
 ##  kurtosis_roll_arm kurtosis_picth_arm kurtosis_yaw_arm skewness_roll_arm
-##          :19216            :19216             :19216           :19216   
 ##  #DIV/0! :   78    #DIV/0! :   80     #DIV/0! :   11   #DIV/0! :   77   
 ##  -0.02438:    1    -0.00484:    1     0.55844 :    2   -0.00051:    1   
 ##  -0.04190:    1    -0.01311:    1     0.65132 :    2   -0.00696:    1   
 ##  -0.05051:    1    -0.02967:    1     -0.01548:    1   -0.01884:    1   
 ##  -0.05695:    1    -0.07394:    1     -0.01749:    1   -0.03359:    1   
 ##  (Other) :  324    (Other) :  322     (Other) :  389   (Other) :  325   
+##  NA's    :19216    NA's    :19216     NA's    :19216   NA's    :19216   
 ##  skewness_pitch_arm skewness_yaw_arm  max_roll_arm     max_picth_arm     
-##          :19216             :19216   Min.   :-73.100   Min.   :-173.000  
-##  #DIV/0! :   80     #DIV/0! :   11   1st Qu.: -0.175   1st Qu.:  -1.975  
-##  -0.00184:    1     -1.62032:    2   Median :  4.950   Median :  23.250  
-##  -0.01185:    1     0.55053 :    2   Mean   : 11.236   Mean   :  35.751  
-##  -0.01247:    1     -0.00311:    1   3rd Qu.: 26.775   3rd Qu.:  95.975  
-##  -0.02063:    1     -0.00562:    1   Max.   : 85.500   Max.   : 180.000  
-##  (Other) :  322     (Other) :  389   NA's   :19216     NA's   :19216     
+##  #DIV/0! :   80     #DIV/0! :   11   Min.   :-73.100   Min.   :-173.000  
+##  -0.00184:    1     -1.62032:    2   1st Qu.: -0.175   1st Qu.:  -1.975  
+##  -0.01185:    1     0.55053 :    2   Median :  4.950   Median :  23.250  
+##  -0.01247:    1     -0.00311:    1   Mean   : 11.236   Mean   :  35.751  
+##  -0.02063:    1     -0.00562:    1   3rd Qu.: 26.775   3rd Qu.:  95.975  
+##  (Other) :  322     (Other) :  389   Max.   : 85.500   Max.   : 180.000  
+##  NA's    :19216     NA's    :19216   NA's   :19216     NA's   :19216     
 ##   max_yaw_arm     min_roll_arm    min_pitch_arm      min_yaw_arm   
 ##  Min.   : 4.00   Min.   :-89.10   Min.   :-180.00   Min.   : 1.00  
 ##  1st Qu.:29.00   1st Qu.:-41.98   1st Qu.: -72.62   1st Qu.: 8.00  
@@ -665,42 +757,42 @@ for (dataset in names(datasets)) {
 ##  Max.   : 153.55   Max.   : 149.40   Max.   : 154.952  
 ##                                                        
 ##  kurtosis_roll_dumbbell kurtosis_picth_dumbbell kurtosis_yaw_dumbbell
-##         :19216                 :19216                  :19216        
-##  #DIV/0!:    5          -0.5464:    2           #DIV/0!:  406        
-##  -0.2583:    2          -0.9334:    2                                
-##  -0.3705:    2          -2.0833:    2                                
+##  #DIV/0!:    5          -0.5464:    2                  :    0        
+##  -0.2583:    2          -0.9334:    2           #DIV/0!:  406        
+##  -0.3705:    2          -2.0833:    2           NA's   :19216        
 ##  -0.5855:    2          -2.0851:    2                                
 ##  -2.0851:    2          -2.0889:    2                                
 ##  (Other):  393          (Other):  396                                
+##  NA's   :19216          NA's   :19216                                
 ##  skewness_roll_dumbbell skewness_pitch_dumbbell skewness_yaw_dumbbell
-##         :19216                 :19216                  :19216        
-##  #DIV/0!:    4          -0.2328:    2           #DIV/0!:  406        
-##  -0.9324:    2          -0.3521:    2                                
-##  0.1110 :    2          -0.7036:    2                                
+##  #DIV/0!:    4          -0.2328:    2                  :    0        
+##  -0.9324:    2          -0.3521:    2           #DIV/0!:  406        
+##  0.1110 :    2          -0.7036:    2           NA's   :19216        
 ##  1.0312 :    2          0.1090 :    2                                
 ##  -0.0082:    1          1.0326 :    2                                
 ##  (Other):  395          (Other):  396                                
+##  NA's   :19216          NA's   :19216                                
 ##  max_roll_dumbbell max_picth_dumbbell max_yaw_dumbbell min_roll_dumbbell
-##  Min.   :-70.10    Min.   :-112.90           :19216    Min.   :-149.60  
-##  1st Qu.:-27.15    1st Qu.: -66.70    -0.6   :   20    1st Qu.: -59.67  
-##  Median : 14.85    Median :  40.05    0.2    :   19    Median : -43.55  
-##  Mean   : 13.76    Mean   :  32.75    -0.8   :   18    Mean   : -41.24  
-##  3rd Qu.: 50.58    3rd Qu.: 133.22    -0.3   :   16    3rd Qu.: -25.20  
-##  Max.   :137.00    Max.   : 155.00    -0.2   :   15    Max.   :  73.20  
-##  NA's   :19216     NA's   :19216      (Other):  318    NA's   :19216    
+##  Min.   :-70.10    Min.   :-112.90    -0.6   :   20    Min.   :-149.60  
+##  1st Qu.:-27.15    1st Qu.: -66.70    0.2    :   19    1st Qu.: -59.67  
+##  Median : 14.85    Median :  40.05    -0.8   :   18    Median : -43.55  
+##  Mean   : 13.76    Mean   :  32.75    -0.3   :   16    Mean   : -41.24  
+##  3rd Qu.: 50.58    3rd Qu.: 133.22    -0.2   :   15    3rd Qu.: -25.20  
+##  Max.   :137.00    Max.   : 155.00    (Other):  318    Max.   :  73.20  
+##  NA's   :19216     NA's   :19216      NA's   :19216    NA's   :19216    
 ##  min_pitch_dumbbell min_yaw_dumbbell amplitude_roll_dumbbell
-##  Min.   :-147.00           :19216    Min.   :  0.00         
-##  1st Qu.: -91.80    -0.6   :   20    1st Qu.: 14.97         
-##  Median : -66.15    0.2    :   19    Median : 35.05         
-##  Mean   : -33.18    -0.8   :   18    Mean   : 55.00         
-##  3rd Qu.:  21.20    -0.3   :   16    3rd Qu.: 81.04         
-##  Max.   : 120.90    -0.2   :   15    Max.   :256.48         
-##  NA's   :19216      (Other):  318    NA's   :19216          
+##  Min.   :-147.00    -0.6   :   20    Min.   :  0.00         
+##  1st Qu.: -91.80    0.2    :   19    1st Qu.: 14.97         
+##  Median : -66.15    -0.8   :   18    Median : 35.05         
+##  Mean   : -33.18    -0.3   :   16    Mean   : 55.00         
+##  3rd Qu.:  21.20    -0.2   :   15    3rd Qu.: 81.04         
+##  Max.   : 120.90    (Other):  318    Max.   :256.48         
+##  NA's   :19216      NA's   :19216    NA's   :19216          
 ##  amplitude_pitch_dumbbell amplitude_yaw_dumbbell total_accel_dumbbell
-##  Min.   :  0.00                  :19216          Min.   : 0.00       
+##  Min.   :  0.00                  :    0          Min.   : 0.00       
 ##  1st Qu.: 17.06           #DIV/0!:    5          1st Qu.: 4.00       
 ##  Median : 41.73           0.00   :  401          Median :10.00       
-##  Mean   : 65.93                                  Mean   :13.72       
+##  Mean   : 65.93           NA's   :19216          Mean   :13.72       
 ##  3rd Qu.: 99.55                                  3rd Qu.:19.00       
 ##  Max.   :273.59                                  Max.   :58.00       
 ##  NA's   :19216                                                       
@@ -753,50 +845,50 @@ for (dataset in names(datasets)) {
 ##  Max.   : 592.0    Max.   :  633     Max.   : 452.00   Max.   : 180.0000  
 ##                                                                           
 ##  pitch_forearm     yaw_forearm      kurtosis_roll_forearm
-##  Min.   :-72.50   Min.   :-180.00          :19216        
-##  1st Qu.:  0.00   1st Qu.: -68.60   #DIV/0!:   84        
-##  Median :  9.24   Median :   0.00   -0.8079:    2        
-##  Mean   : 10.71   Mean   :  19.21   -0.9169:    2        
-##  3rd Qu.: 28.40   3rd Qu.: 110.00   -0.0227:    1        
-##  Max.   : 89.80   Max.   : 180.00   -0.0359:    1        
-##                                     (Other):  316        
+##  Min.   :-72.50   Min.   :-180.00   #DIV/0!:   84        
+##  1st Qu.:  0.00   1st Qu.: -68.60   -0.8079:    2        
+##  Median :  9.24   Median :   0.00   -0.9169:    2        
+##  Mean   : 10.71   Mean   :  19.21   -0.0227:    1        
+##  3rd Qu.: 28.40   3rd Qu.: 110.00   -0.0359:    1        
+##  Max.   : 89.80   Max.   : 180.00   (Other):  316        
+##                                     NA's   :19216        
 ##  kurtosis_picth_forearm kurtosis_yaw_forearm skewness_roll_forearm
-##         :19216                 :19216               :19216        
-##  #DIV/0!:   85          #DIV/0!:  406        #DIV/0!:   83        
-##  -0.0073:    1                               -0.1912:    2        
-##  -0.0442:    1                               -0.4126:    2        
+##  #DIV/0!:   85                 :    0        #DIV/0!:   83        
+##  -0.0073:    1          #DIV/0!:  406        -0.1912:    2        
+##  -0.0442:    1          NA's   :19216        -0.4126:    2        
 ##  -0.0489:    1                               -0.0004:    1        
 ##  -0.0523:    1                               -0.0013:    1        
 ##  (Other):  317                               (Other):  317        
+##  NA's   :19216                               NA's   :19216        
 ##  skewness_pitch_forearm skewness_yaw_forearm max_roll_forearm
-##         :19216                 :19216        Min.   :-66.60  
-##  #DIV/0!:   85          #DIV/0!:  406        1st Qu.:  0.00  
-##  0.0000 :    4                               Median : 26.80  
-##  -0.6992:    2                               Mean   : 24.49  
-##  -0.0113:    1                               3rd Qu.: 45.95  
-##  -0.0131:    1                               Max.   : 89.80  
-##  (Other):  313                               NA's   :19216   
+##  #DIV/0!:   85                 :    0        Min.   :-66.60  
+##  0.0000 :    4          #DIV/0!:  406        1st Qu.:  0.00  
+##  -0.6992:    2          NA's   :19216        Median : 26.80  
+##  -0.0113:    1                               Mean   : 24.49  
+##  -0.0131:    1                               3rd Qu.: 45.95  
+##  (Other):  313                               Max.   : 89.80  
+##  NA's   :19216                               NA's   :19216   
 ##  max_picth_forearm max_yaw_forearm min_roll_forearm  min_pitch_forearm
-##  Min.   :-151.00          :19216   Min.   :-72.500   Min.   :-180.00  
-##  1st Qu.:   0.00   #DIV/0!:   84   1st Qu.: -6.075   1st Qu.:-175.00  
-##  Median : 113.00   -1.2   :   32   Median :  0.000   Median : -61.00  
-##  Mean   :  81.49   -1.3   :   31   Mean   : -0.167   Mean   : -57.57  
-##  3rd Qu.: 174.75   -1.4   :   24   3rd Qu.: 12.075   3rd Qu.:   0.00  
-##  Max.   : 180.00   -1.5   :   24   Max.   : 62.100   Max.   : 167.00  
-##  NA's   :19216     (Other):  211   NA's   :19216     NA's   :19216    
+##  Min.   :-151.00   #DIV/0!:   84   Min.   :-72.500   Min.   :-180.00  
+##  1st Qu.:   0.00   -1.2   :   32   1st Qu.: -6.075   1st Qu.:-175.00  
+##  Median : 113.00   -1.3   :   31   Median :  0.000   Median : -61.00  
+##  Mean   :  81.49   -1.4   :   24   Mean   : -0.167   Mean   : -57.57  
+##  3rd Qu.: 174.75   -1.5   :   24   3rd Qu.: 12.075   3rd Qu.:   0.00  
+##  Max.   : 180.00   (Other):  211   Max.   : 62.100   Max.   : 167.00  
+##  NA's   :19216     NA's   :19216   NA's   :19216     NA's   :19216    
 ##  min_yaw_forearm amplitude_roll_forearm amplitude_pitch_forearm
-##         :19216   Min.   :  0.000        Min.   :  0.0          
-##  #DIV/0!:   84   1st Qu.:  1.125        1st Qu.:  2.0          
-##  -1.2   :   32   Median : 17.770        Median : 83.7          
-##  -1.3   :   31   Mean   : 24.653        Mean   :139.1          
-##  -1.4   :   24   3rd Qu.: 39.875        3rd Qu.:350.0          
-##  -1.5   :   24   Max.   :126.000        Max.   :360.0          
-##  (Other):  211   NA's   :19216          NA's   :19216          
+##  #DIV/0!:   84   Min.   :  0.000        Min.   :  0.0          
+##  -1.2   :   32   1st Qu.:  1.125        1st Qu.:  2.0          
+##  -1.3   :   31   Median : 17.770        Median : 83.7          
+##  -1.4   :   24   Mean   : 24.653        Mean   :139.1          
+##  -1.5   :   24   3rd Qu.: 39.875        3rd Qu.:350.0          
+##  (Other):  211   Max.   :126.000        Max.   :360.0          
+##  NA's   :19216   NA's   :19216          NA's   :19216          
 ##  amplitude_yaw_forearm total_accel_forearm var_accel_forearm
-##         :19216         Min.   :  0.00      Min.   :  0.000  
+##         :    0         Min.   :  0.00      Min.   :  0.000  
 ##  #DIV/0!:   84         1st Qu.: 29.00      1st Qu.:  6.759  
 ##  0.00   :  322         Median : 36.00      Median : 21.165  
-##                        Mean   : 34.72      Mean   : 33.502  
+##  NA's   :19216         Mean   : 34.72      Mean   : 33.502  
 ##                        3rd Qu.: 41.00      3rd Qu.: 51.240  
 ##                        Max.   :108.00      Max.   :172.606  
 ##                                            NA's   :19216    
@@ -849,6 +941,10 @@ for (dataset in names(datasets)) {
 ##          
 ## </code></pre>
 </div>
+</div>
+<div id="apendix-iii" class="section level2">
+<h2>Apendix III</h2>
+<p><a href="https://github.com/guscastles/practical_machine_learning_in_R">GitHub Repository</a></p>
 </div>
 
 

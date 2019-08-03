@@ -11,9 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Abstract
 
-The goal of this project is to predict the manner in which sujects to the study did the exercise. This is the "classe" variable in the training set. Several variables are used to predict with. A report will describe how the model was built, how the cross validation was used, what the expected out of sample error is interpreted, and why the choices are made. Lastly, the model will predict 20 different test cases.
+One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict the manner in which sujects of the study did the exercise. This is the "classe" variable in the training set. Several variables are used to predict with. A report will describe how the model was built, how the cross validation was used, what the expected out of sample error is interpreted, and why the choices are made. Lastly, the model will predict 20 different test cases.
 
-## Relevant Data
+The data for this project come from this source:
+
+> [http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har][0]
+
+[0]: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
+
+This group has been very generous in allowing the data to be used for this kind of assignment.
+
+> Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. [Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements][ref_01] . Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6.
+Cited by 2 (Google Scholar) 
+
+[ref_01]: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/work.jsf?p1=10335
+
+## Data Fetching
 
 This is the training and testing data available for this project
 ```{r data, echo=TRUE, message=FALSE}
@@ -29,6 +42,8 @@ names(datasets) <- c("training", "testing")
 for (dataset in names(datasets)) {
         datasets[[dataset]] <- loadFile(paste0("pml-", dataset, ".csv"))
 }
+training <- datasets[['training']]
+testing <- datasets[['testing']]
 ```
 
 ## Exploratory Data Analysis
@@ -37,14 +52,65 @@ for (dataset in names(datasets)) {
 
 #### Data Structure <a href="#data_structure">(Appendix I)</a>
 
-```{r training_dataset, echo=FALSE}
-training <- datasets[['training']]
+The inspection on the dataframe structure shows several variables with majority null values. This values will be removed from the relevant predictor list for training the model.
+
+These variables will be removed from the predictors list, since they are not measurement variables or not relevant to this study:
+
+* X
+* user_name
+* raw_timestamp_par_1
+* raw_timestamp_par_2
+* cvtd_timestamp
+* new_window
+* num_window
+
+These are the relevant features for the model
+```{r na_majority_columns, echo=FALSE, message=FALSE}
+library(dplyr); library(tidyr); library(naniar)
+
+createColList <- function(col) {
+        replaceList <- list("")
+        names(replaceList) <- c(col)
+        replaceList
+}
+
+classeCol <- which(colnames(training) == "classe")
+relevantFeatures <- c()
+for (col in colnames(training[, -c(1:7, classeCol)])) {
+        if (is.factor(training[, col])) {
+                training[col] <- training %>%
+                                 select(col) %>%
+                                 replace_with_na(replace = createColList(col))
+        }
+        totalNAPerc <- sum(is.na(training[col])) / nrow(training)
+        if (totalNAPerc < 0.5) {
+                relevantFeatures <- c(relevantFeatures, col)
+        }
+}
+relevantFeatures
 ```
-The inspection on the dataframe structure shows several variables with majority null values. This values will be removed from the relevant predictors for training the model.
+
+A quick classification tree (CART) model, to create an initial analysis of the possible model
+```{r cart, message=FALSE}
+library(caret)
+modelFile <- "rfModel.rda"
+if (!file.exists(modelFile)) {
+        trControl = trainControl(method = "cv", number = 5, allowParallel = TRUE)
+        modelFit <- train(classe ~ ., data = training[, c("classe", relevantFeatures)], method = "rf", trControl = trControl)
+        save(modelFit, file = modelFile)
+} else {
+        load(file = modelFile)
+}
+modelFit
+```
+
+Testing the model with the testing set and producing the 20 results for the project quiz
+```{r test_sample, message=FALSE, echo=TRUE}
+prediction <- predict(modelFit, testing)
+matrix(prediction, ncol = 1)
+```
 
 #### Data Summary <a href="#data_structure">(Appendix II)</a>
-
-
 
 #### Sample Records
 ```{r sample}
@@ -66,3 +132,9 @@ str(training)
 ```{r summary}
 summary(training)
 ```
+
+## Apendix III
+
+[GitHub Repository][3]
+
+[3]: https://github.com/guscastles/practical_machine_learning_in_R
