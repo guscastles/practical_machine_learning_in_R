@@ -380,12 +380,16 @@ testing &lt;- datasets[['testing']]</code></pre>
 ## [46] &quot;gyros_forearm_z&quot;      &quot;accel_forearm_x&quot;      &quot;accel_forearm_y&quot;     
 ## [49] &quot;accel_forearm_z&quot;      &quot;magnet_forearm_x&quot;     &quot;magnet_forearm_y&quot;    
 ## [52] &quot;magnet_forearm_z&quot;</code></pre>
-<p>A quick classification tree (CART) model, to create an initial analysis of the possible model</p>
+<p>A Random Forrest classification model will be used, to create an initial analysis of the possible model.</p>
+<p>The model uses cross-validation with 5 fold, with the number of records for each fold will be approximately 15697, to avoid overfitting the model. The parallel background will be used, if available.</p>
 <pre class="r"><code>library(caret)
 modelFile &lt;- &quot;rfModel.rda&quot;
 if (!file.exists(modelFile)) {
         trControl = trainControl(method = &quot;cv&quot;, number = 5, allowParallel = TRUE)
-        modelFit &lt;- train(classe ~ ., data = training[, c(&quot;classe&quot;, relevantFeatures)], method = &quot;rf&quot;, trControl = trControl)
+        modelFit &lt;- train(classe ~ .,
+                          data = training[, c(&quot;classe&quot;, relevantFeatures)],
+                          method = &quot;rf&quot;,
+                          trControl = trControl)
         save(modelFit, file = modelFile)
 } else {
         load(file = modelFile)
@@ -944,7 +948,9 @@ matrix(prediction, ncol = 1)</code></pre>
 </div>
 <div id="apendix-iii" class="section level2">
 <h2>Apendix III</h2>
-<p><a href="https://github.com/guscastles/practical_machine_learning_in_R">GitHub Repository</a></p>
+<ul>
+<li><a href="https://github.com/guscastles/practical_machine_learning_in_R">GitHub Repository</a></li>
+</ul>
 </div>
 
 

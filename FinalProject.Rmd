@@ -90,13 +90,18 @@ for (col in colnames(training[, -c(1:7, classeCol)])) {
 relevantFeatures
 ```
 
-A quick classification tree (CART) model, to create an initial analysis of the possible model
+A Random Forrest classification model will be used, to create an initial analysis of the possible model.
+
+The model uses cross-validation with 5 fold, with the number of records for each fold will be approximately `r as.integer(dim(training)[1] - dim(training)[1] / 5)`, to avoid overfitting the model. The parallel background will be used, if available.
 ```{r cart, message=FALSE}
 library(caret)
 modelFile <- "rfModel.rda"
 if (!file.exists(modelFile)) {
         trControl = trainControl(method = "cv", number = 5, allowParallel = TRUE)
-        modelFit <- train(classe ~ ., data = training[, c("classe", relevantFeatures)], method = "rf", trControl = trControl)
+        modelFit <- train(classe ~ .,
+                          data = training[, c("classe", relevantFeatures)],
+                          method = "rf",
+                          trControl = trControl)
         save(modelFit, file = modelFile)
 } else {
         load(file = modelFile)
@@ -135,6 +140,6 @@ summary(training)
 
 ## Apendix III
 
-[GitHub Repository][3]
+* [GitHub Repository][3]
 
 [3]: https://github.com/guscastles/practical_machine_learning_in_R
