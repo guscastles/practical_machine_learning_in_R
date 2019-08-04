@@ -117,7 +117,11 @@ matrix(prediction, ncol = 1)
 
 #### Out-Of-Sample Errors
 
-The OOS errors are expected to be the same as the sample error, given the dataset is coming from the same batch. The high accuracy (~99%) may suggest overfitting is occurring with the training mode, but the answers using the testing dataset were 100% accurate. Still, some new data may suffer from overfitting, but the evidence collected so far shows no sign of such event.
+The OOS errors are expected to be the same as the sample error, as shown below, 0.44%. The high accuracy (~99%) may suggest overfitting is occurring with the training mode, but the answers using the testing dataset were 100% accurate. Still, some new data may suffer from overfitting, but the evidence collected so far shows no sign of such event.
+
+```{r}
+modelFit$finalModel
+```
 
 #### Data Summary <a href="#data_structure">(Appendix II)</a>
 

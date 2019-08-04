@@ -438,6 +438,26 @@ matrix(prediction, ncol = 1)</code></pre>
 ## [19,] &quot;B&quot; 
 ## [20,] &quot;B&quot;</code></pre>
 </div>
+<div id="out-of-sample-errors" class="section level4">
+<h4>Out-Of-Sample Errors</h4>
+<p>The OOS errors are expected to be the same as the sample error, as shown below, 0.44%. The high accuracy (~99%) may suggest overfitting is occurring with the training mode, but the answers using the testing dataset were 100% accurate. Still, some new data may suffer from overfitting, but the evidence collected so far shows no sign of such event.</p>
+<pre class="r"><code>modelFit$finalModel</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(x = x, y = y, mtry = param$mtry) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 27
+## 
+##         OOB estimate of  error rate: 0.44%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 5575    3    1    0    1 0.0008960573
+## B   21 3771    5    0    0 0.0068475112
+## C    0    9 3402   11    0 0.0058445354
+## D    0    0   22 3192    2 0.0074626866
+## E    0    1    5    6 3595 0.0033268644</code></pre>
+</div>
 <div id="data-summary-appendix-ii" class="section level4">
 <h4>Data Summary <a href="#data_structure">(Appendix II)</a></h4>
 </div>
